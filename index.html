@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdClip Studio — Generator Video Publicitar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #111118;
+      --card:     #16161f;
+      --border:   #2a2a38;
+      --accent:   #ff4d6d;
+      --accent2:  #ff8c42;
+      --glow:     rgba(255,77,109,0.18);
+      --text:     #f0f0f5;
+      --muted:    #8888aa;
+      --success:  #22c55e;
+      --warning:  #f59e0b;
+      --error:    #ef4444;
+      --radius:   14px;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, rgba(255,77,109,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 110%, rgba(255,140,66,0.08) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Noise grain overlay ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .5;
+    }
+
+    /* ── Layout ── */
+    .wrapper {
+      position: relative; z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 56px;
+      animation: fadeUp .7s ease both;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,77,109,.12);
+      border: 1px solid rgba(255,77,109,.28);
+      color: var(--accent);
+      font-size: 11px; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 6px 14px; border-radius: 100px;
+      margin-bottom: 24px;
+    }
+
+    .badge svg { width: 14px; height: 14px; }
+
+    h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -.03em;
+      margin-bottom: 16px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      font-weight: 300;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Steps indicator ── */
+    .steps {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; margin-bottom: 48px;
+      animation: fadeUp .7s .1s ease both;
+    }
+
+    .step {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      position: relative;
+    }
+
+    .step-num {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-head);
+      font-size: 13px; font-weight: 700;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      transition: all .3s ease;
+    }
+
+    .step.active .step-num {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 20px var(--glow);
+    }
+
+    .step-label {
+      font-size: 10px; font-weight: 500; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    .step.active .step-label { color: var(--text); }
+
+    .step-line {
+      width: 64px; height: 1px;
+      background: var(--border);
+      margin: 0 8px;
+      margin-bottom: 28px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp .7s .15s ease both;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,77,109,.4), transparent);
+    }
+
+    .card-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .card-icon {
+      width: 40px; height: 40px;
+      background: rgba(255,77,109,.12);
+      border: 1px solid rgba(255,77,109,.22);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .card-desc { font-size: .85rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 24px; }
+
+    label {
+      display: block;
+      font-size: 12px; font-weight: 500; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 300;
+      line-height: 1.6;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+      resize: vertical;
+    }
+
+    textarea:focus, input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(255,77,109,.1);
+    }
+
+    textarea { min-height: 130px; }
+
+    textarea::placeholder, input::placeholder { color: #444458; }
+
+    /* ── Phone row ── */
+    .phone-wrap {
+      position: relative;
+    }
+
+    .phone-prefix {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); font-size: .9rem; pointer-events: none;
+    }
+
+    .phone-wrap input { padding-left: 44px; }
+
+    /* ── File Drop Zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .25s ease;
+      position: relative;
+      background: var(--surface);
+    }
+
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(255,77,109,.05);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      opacity: 0; cursor: pointer;
+    }
+
+    .drop-icon {
+      font-size: 36px; margin-bottom: 12px; display: block;
+      filter: grayscale(1) opacity(.5);
+      transition: filter .25s;
+    }
+
+    .drop-zone:hover .drop-icon { filter: none; }
+
+    .drop-title {
+      font-family: var(--font-head);
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .drop-hint { font-size: .82rem; color: var(--muted); }
+
+    /* ── Image preview grid ── */
+    #previewGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .preview-thumb {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1.5px solid var(--border);
+      animation: popIn .25s ease both;
+    }
+
+    /* ── Char counter ── */
+    .field-meta {
+      display: flex; justify-content: flex-end;
+      margin-top: 6px;
+    }
+
+    .char-count { font-size: 11px; color: var(--muted); }
+
+    /* ── Submit button ── */
+    .btn-generate {
+      width: 100%;
+      padding: 17px 24px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border: none; border-radius: 12px;
+      color: #fff;
+      font-family: var(--font-head);
+      font-size: 1rem; font-weight: 700; letter-spacing: .02em;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 8px 32px rgba(255,77,109,.3);
+      position: relative; overflow: hidden;
+      animation: fadeUp .7s .3s ease both;
+    }
+
+    .btn-generate:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 12px 40px rgba(255,77,109,.4); }
+    .btn-generate:active { transform: scale(.98); }
+    .btn-generate:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .btn-inner { display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+    /* ── Progress / Status ── */
+    #statusWrap {
+      margin-top: 28px;
+      display: none;
+      animation: fadeUp .4s ease both;
+    }
+
+    .status-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+    }
+
+    .progress-bar-track {
+      height: 4px;
+      background: var(--surface);
+      border-radius: 100px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 100px;
+      width: 0%;
+      transition: width .6s ease;
+    }
+
+    .progress-bar-fill.indeterminate {
+      animation: indeterminate 1.6s ease-in-out infinite;
+      width: 30%;
+    }
+
+    .status-row {
+      display: flex; align-items: flex-start; gap: 14px;
+    }
+
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent); margin-top: 5px; flex-shrink: 0;
+      animation: pulse 1.5s ease infinite;
+    }
+
+    .status-dot.success { background: var(--success); animation: none; }
+    .status-dot.error { background: var(--error); animation: none; }
+
+    .status-title {
+      font-family: var(--font-head);
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .status-msg { font-size: .88rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── Tip pills ── */
+    .tips {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 32px;
+      animation: fadeUp .7s .35s ease both;
+    }
+
+    .tip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 11px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.85); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,109,.5); }
+      50%       { box-shadow: 0 0 0 6px transparent; }
+    }
+
+    @keyframes indeterminate {
+      0%   { margin-left: -30%; width: 30%; }
+      50%  { margin-left: 35%; width: 50%; }
+      100% { margin-left: 100%; width: 30%; }
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    @media (max-width: 600px) {
+      .card { padding: 24px 18px; }
+      .step-line { width: 32px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+      </svg>
+      Powered by ElevenLabs AI
+    </div>
+    <h1>Creează <span>videoclipuri</span><br/>publicitare în secunde</h1>
+    <p class="subtitle">Transformă pozele și descrierea ta într-un spot video narrat profesional, gata de publicat.</p>
+  </header>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <div class="step-label">Descriere</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step active" id="step2">
+      <div class="step-num">2</div>
+      <div class="step-label">Poze</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <div class="step-label">Generează</div>
+    </div>
+  </div>
+
+  <form id="uploadForm" enctype="multipart/form-data">
+
+    <!-- Card 1: Text -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">✍️</div>
+        <div>
+          <div class="card-title">Conținutul reclamei</div>
+          <div class="card-desc">Textul va fi narrat de vocea AI română</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="description">Descrierea produsului / serviciului</label>
+        <textarea id="description" name="description" required
+          placeholder="Ex: Descoperă oferta noastră specială de primăvară! Mobilă premium din lemn masiv, livrare gratuită în toată țara. Reduceri de până la 40% pentru comenzile plasate până pe 30 martie..."></textarea>
+        <div class="field-meta">
+          <span class="char-count" id="charCount">0 caractere</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="phone">Număr de contact (opțional)</label>
+        <div class="phone-wrap">
+          <span class="phone-prefix">📞</span>
+          <input type="text" id="phone" name="phone" placeholder="07xx xxx xxx" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Images -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🖼️</div>
+        <div>
+          <div class="card-title">Imagini pentru video</div>
+          <div class="card-desc">Adaugă 2–8 poze pentru un rezultat optim</div>
+        </div>
+      </div>
+
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="images" name="images" multiple accept="image/*" required />
+        <span class="drop-icon">📁</span>
+        <div class="drop-title">Trage pozele aici sau apasă pentru a selecta</div>
+        <div class="drop-hint">JPG, PNG, WEBP — maxim 10 MB per fișier</div>
+      </div>
+
+      <div id="previewGrid"></div>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn-generate" id="generateBtn">
+      <span class="btn-inner">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Generează Videoclipul
+      </span>
+    </button>
+
+  </form>
+
+  <!-- Status -->
+  <div id="statusWrap">
+    <div class="status-card">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill indeterminate" id="progressBar"></div>
+      </div>
+      <div class="status-row">
+        <div class="status-dot" id="statusDot"></div>
+        <div>
+          <div class="status-title" id="statusTitle">Se procesează…</div>
+          <div class="status-msg" id="statusMsg">Generăm naratorul AI și asamblăm videoclipul. Poate dura 30–120 secunde.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="tips">
+    <div class="tip">💡 Minim 2 poze pentru un video mai dinamic</div>
+    <div class="tip">🎙️ Voce română naturală — ElevenLabs</div>
+    <div class="tip">📱 Format 16:9, ideal pentru Facebook & Instagram</div>
+    <div class="tip">⚡ Procesare în ~60 secunde</div>
+  </div>
+
+</div>
+
+<script>
+  // Char counter
+  const desc = document.getElementById('description');
+  const counter = document.getElementById('charCount');
+  desc.addEventListener('input', () => {
+    const n = desc.value.length;
+    counter.textContent = n + ' caractere';
+    counter.style.color = n > 600 ? '#f59e0b' : '';
+  });
+
+  // Drag & drop styling
+  const dropZone = document.getElementById('dropZone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => { dropZone.classList.remove('drag-over'); });
+
+  // Image preview
+  const imagesInput = document.getElementById('images');
+  const previewGrid = document.getElementById('previewGrid');
+
+  imagesInput.addEventListener('change', () => {
+    previewGrid.innerHTML = '';
+    const files = Array.from(imagesInput.files);
+    files.slice(0, 12).forEach((file, i) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'preview-thumb';
+        img.style.animationDelay = (i * 0.05) + 's';
+        previewGrid.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+    if (files.length > 12) {
+      const more = document.createElement('div');
+      more.className = 'preview-thumb';
+      more.style.cssText = 'display:flex;align-items:center;justify-content:center;background:#16161f;color:#8888aa;font-size:.8rem;font-family:var(--font-head)';
+      more.textContent = '+' + (files.length - 12);
+      previewGrid.appendChild(more);
+    }
+    // Update step 2 indicator
+    document.getElementById('step2').classList.add('active');
+  });
+
+  // Form submit
+  document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('generateBtn');
+    const statusWrap = document.getElementById('statusWrap');
+    const progressBar = document.getElementById('progressBar');
+    const statusDot = document.getElementById('statusDot');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusMsg = document.getElementById('statusMsg');
+
+    btn.disabled = true;
+    btn.querySelector('.btn-inner').innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+           style="animation:spin .8s linear infinite">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+      Se procesează…`;
+
+    // Show status
+    statusWrap.style.display = 'block';
+    progressBar.className = 'progress-bar-fill indeterminate';
+    statusDot.className = 'status-dot';
+    statusTitle.textContent = 'Se generează naratorul AI…';
+    statusMsg.textContent = 'ElevenLabs creează vocea română. Videoclipul va fi gata în 30–120 secunde.';
+    document.getElementById('step3').classList.add('active');
+
+    // Simulate progress messages
+    const msgs = [
+      [8000,  'Se asamblează cadrele video…', 'Imaginile sunt redimensionate și compuse în timeline.'],
+      [18000, 'Se adaugă efecte și tranziții…', 'Fadein, fadeout și textele overlay sunt aplicate.'],
+      [30000, 'Se finalizează exportul…', 'Codificăm videoclipul final în MP4 cu audio AAC.'],
+    ];
+    msgs.forEach(([delay, t, m]) => setTimeout(() => {
+      if (btn.disabled) { statusTitle.textContent = t; statusMsg.textContent = m; }
+    }, delay));
+
+    const formData = new FormData(this);
+    try {
+      const response = await fetch('/generate', { method: 'POST', body: formData });
+
+      if (!response.ok) {
+        let errText = await response.text();
+        try { errText = JSON.parse(errText).detail || errText; } catch {}
+        throw new Error(errText);
+      }
+
+      progressBar.className = 'progress-bar-fill';
+      progressBar.style.width = '100%';
+      statusDot.className = 'status-dot success';
+      statusTitle.textContent = '🎉 Videoclip generat cu succes!';
+      statusMsg.textContent = 'Descărcarea începe automat. Verifică folderul Downloads.';
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'videoclip_publicitar.mp4';
+      document.body.appendChild(a); a.click(); a.remove();
+
+    } catch (err) {
+      progressBar.className = 'progress-bar-fill';
+      progressBar.style.width = '100%';
+      progressBar.style.background = 'var(--error)';
+      statusDot.className = 'status-dot error';
+      statusTitle.textContent = 'Eroare la generare';
+      statusMsg.textContent = err.message || 'A apărut o problemă. Verifică consola serverului.';
+    } finally {
+      btn.disabled = false;
+      btn.querySelector('.btn-inner').innerHTML = `
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Generează Din Nou`;
+    }
+  });
+</script>
+
+<style>
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+</style>
+</body>
+</html>
